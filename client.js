@@ -34,7 +34,7 @@ const generateKeypair = async () => {
 const setPublicKey = async (password) => {
     const publicKey = fs.readFileSync(path.join(keyDir, 'public.pem'), 'utf8');
     try {
-        const response = await axios.post('http://localhost:3000/store-public-key', {
+        const response = await axios.post('http://localhost:3000/set-public-key', {
             password,
             publicKey
         });
@@ -52,7 +52,7 @@ switch (command) {
     case 'generate-keypair':
         generateKeypair();
         break;
-    case 'setPublicKey':
+    case 'set-public-key':
         const password = args[0];
         if (!password) {
             console.error('Password is required to set public key');
@@ -62,6 +62,6 @@ switch (command) {
         break;
 
     default:
-        console.error('Unknown command. Use "generate-keypair", "setPublicKey"');
+        console.error('Unknown command. Use "generate-keypair", "set-public-key"');
         break;
 }

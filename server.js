@@ -23,7 +23,7 @@ app.post("/set-password", async (req, res) => {
     res.status(200).json({ message: 'Registered successfully!' });
 });
 
-app.post("/store-public-key", async (req, res) => {
+app.post("/set-public-key", async (req, res) => {
     const { password, publicKey } = req.body;
 
     if (!password || !publicKey) {
