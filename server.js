@@ -6,6 +6,15 @@ const port = 3000;
 const app = express();
 app.use(express.json());
 
+
+app.use((req, res, next) => {
+    const allowedMethods = ['POST'];
+    if (!allowedMethods.includes(req.method)) {
+        return res.status(405).send('Method Not Allowed');
+    }
+    next();
+});
+
 let storedPublicKey = null;
 let hashedPassword = null;
 
