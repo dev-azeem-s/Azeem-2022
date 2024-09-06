@@ -1,5 +1,6 @@
 const express = require("express");
 const bcrypt = require("bcrypt");
+const crypto = require("crypto");
 
 const port = 3000;
 const app = express();
@@ -13,15 +14,14 @@ const verifyPassword = async (password, hash) => {
     return bcrypt.compare(password, hash);
 };
 
-app.post("/set-password", async (req, res) => {
-    const { username, publicKey } = req.body;
+// Helper function to verify a signature
+const verifySignature = (publicKey, message, signature) => {
+    console.log(`${message}`);
+    console.log(`${signature}`);
 
-    if (!username || !publicKey) {
-        return res.status(400).json({ error: 'Username and public key are required' });
-    }
-
-    res.status(200).json({ message: 'Registered successfully!' });
-});
+    const verify = crypto.createVerify('sha256').update(message).end();
+    return verify.verify(publicKey, signature, 'hex');
+};
 
 app.post("/set-public-key", async (req, res) => {
     const { password, publicKey } = req.body;
@@ -46,11 +46,23 @@ app.post("/set-public-key", async (req, res) => {
 });
 
 
-app.post('/verify-signature', (req, res) => {
+// Endpoint to verify a message signature (no authentication required)
+app.post('/verify-message', (req, res) => {
     const { message, signature } = req.body;
-    console.log(message, signature);
+    if (!message || !signature) {
+        return res.status(400).json({ error: 'Message and signature are required' });
+    }
 
-    res.status(200).json({ message: 'Signature is valid' });
+    if (!storedPublicKey) {
+        return res.status(400).json({ error: 'Public key is not set on server' });
+    }
+
+    const validSignature = verifySignature(storedPublicKey, message, signature);
+    if (!validSignature) {
+        return res.status(401).json({ error: 'Invalid signature' });
+    }
+
+    res.status(200).json({ message: 'Message verified successfully' });
 });
 
 

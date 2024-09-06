@@ -50,8 +50,23 @@ const signMessage = async (message) => {
 
     // using crypto to sign the message with the private key and print the signature and message to the console
     const signature = crypto.createSign('sha256').update(message).sign(privateKey, 'hex');
-    console.log('Message: ', message);
-    console.log('Signature: ', signature);
+    console.log({
+        message,
+        signature
+    })
+}
+
+const verifyMessage = async (message, signature) => {
+    try {
+        const response = await axios.post('http://localhost:3000/verify-message', {
+            message,
+            signature
+        });
+        console.log(response.data.message);
+    } catch (error) {
+        console.error('Verification failed:', error.response.data.error);
+    }
+
 }
 
 // CLI handling
@@ -62,21 +77,43 @@ switch (command) {
         generateKeypair();
         break;
     case 'set-public-key':
-        const password = args[0];
-        if (!password) {
-            console.error('Password is required to set public key');
-            break;
+        {
+            const password = args[0];
+            if (!password) {
+                console.error('Password is required to set public key');
+                break;
+            }
+            setPublicKey(password);
         }
-        setPublicKey(password);
         break;
 
-    case 'sign-message': 
-        const message = args.concat('').join(' ');
-        if (!message) {
-            console.error('Message is required to sign');
-            break;
+    case 'sign-message':
+        {
+            const message = args.concat('').join(' ');
+            if (!message || message === '') {
+                console.error('Message is required to sign');
+                break;
+            }
+            signMessage(message.trim());
         }
-        signMessage(message);
+        break;
+    case 'verify-message':
+        {
+            const arguments = args.concat('').join(' ');
+            if (arguments.indexOf('+') === -1) {
+                console.error('Message and signature are required to verify, use + to separate them, message + signature');
+                break;
+            }
+
+            const [message, signature] = arguments.split('+');
+
+            if (!message || !signature) {
+                console.error('Message and signature are required to verify');
+                break;
+            }
+
+            verifyMessage(message.trim(), signature.trim());
+        }
         break;
     default:
         console.error('Unknown command. Use "generate-keypair", "set-public-key", "sign-message"');
