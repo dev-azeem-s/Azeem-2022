@@ -3,6 +3,7 @@ const axios = require("axios");
 const path = require("path");
 const fs = require("fs");
 
+const keyDir = path.join(__dirname, "keys");
 // generating asymmetric keypair and storing it
 const generateKeypair = async () => {
     try {
@@ -21,7 +22,7 @@ const generateKeypair = async () => {
         const publicKey = keypair.publicKey;
         const privateKey = keypair.privateKey;
 
-        const keyDir = path.join(__dirname, "keys");
+        
         if (!fs.existsSync(keyDir)) {
             fs.mkdirSync(keyDir);
         }
@@ -51,7 +52,7 @@ const setPublicKey = async (password) => {
         });
         console.log(response.data);
     } catch (error) {
-        console.error(error.response.data);
+        console.error(error);
     }
 }
 
