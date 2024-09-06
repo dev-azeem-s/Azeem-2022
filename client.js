@@ -1,6 +1,7 @@
 const crypto = require("crypto");
 const axios = require("axios");
 const path = require("path");
+const fs = require("fs");
 
 const keyDir = path.join(__dirname, "keys");
 if (!fs.existsSync(keyDir)) {
@@ -30,6 +31,20 @@ const generateKeypair = async () => {
 };
 
 
+const setPublicKey = async (password) => {
+    const publicKey = fs.readFileSync(path.join(keyDir, 'public.pem'), 'utf8');
+    try {
+        const response = await axios.post('http://localhost:3000/store-public-key', {
+            password,
+            publicKey
+        });
+        console.log(response.data);
+    } catch (error) {
+        console.error(error.response.data);
+    }
+}
+
+
 // CLI handling
 const [, , command, ...args] = process.argv;
 
@@ -37,8 +52,16 @@ switch (command) {
     case 'generate-keypair':
         generateKeypair();
         break;
+    case 'setPublicKey':
+        const password = args[0];
+        if (!password) {
+            console.error('Password is required to set public key');
+            break;
+        }
+        setPublicKey(password);
+        break;
 
     default:
-        console.error('Unknown command. Use "generate-keypair", "register", "sign", or "verify".');
+        console.error('Unknown command. Use "generate-keypair", "setPublicKey"');
         break;
 }

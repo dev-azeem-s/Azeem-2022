@@ -1,2 +1,6 @@
 # Dependencies
 node_modules
+
+# removing keys 
+keys/private.pem
+keys/public.pem
