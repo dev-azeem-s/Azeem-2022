@@ -16,53 +16,57 @@ const verifyPassword = async (password, hash) => {
 
 // Helper function to verify a signature
 const verifySignature = (publicKey, message, signature) => {
-    console.log(`${message}`);
-    console.log(`${signature}`);
-
     const verify = crypto.createVerify('sha256').update(message).end();
     return verify.verify(publicKey, signature, 'hex');
 };
 
 app.post("/set-public-key", async (req, res) => {
-    const { password, publicKey } = req.body;
+    try {
+        const { password, publicKey } = req.body;
 
-    if (!password || !publicKey) {
-        return res.status(400).json({ error: 'Password and public key are required' });
+        if (!password || !publicKey) {
+            return res.status(400).json({ error: 'Password and public key are required' });
+        }
+
+        if (!hashedPassword) {
+            return res.status(400).json({ error: 'Internal server error' });
+        }
+
+        // authenticating client using password
+        const validPassword = await verifyPassword(password, hashedPassword);
+        if (!validPassword) {
+            return res.status(401).json({ error: 'Invalid password' });
+        }
+
+        storedPublicKey = publicKey;
+        res.status(200).json({ message: 'Public key stored successfully' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
     }
-
-    if (!hashedPassword) {
-        return res.status(400).json({ error: 'Internal server error' });
-    }
-
-    const validPassword = await verifyPassword(password, hashedPassword);
-    if (!validPassword) {
-        return res.status(401).json({ error: 'Invalid password' });
-    }
-
-    storedPublicKey = publicKey;
-
-    console.log('Public key stored successfully!');
-    res.status(200).json({ message: 'Public key stored successfully' });
 });
 
 
 // Endpoint to verify a message signature (no authentication required)
 app.post('/verify-message', (req, res) => {
-    const { message, signature } = req.body;
-    if (!message || !signature) {
-        return res.status(400).json({ error: 'Message and signature are required' });
-    }
+    try {
+        const { message, signature } = req.body;
+        if (!message || !signature) {
+            return res.status(400).json({ error: 'Message and signature are required' });
+        }
 
-    if (!storedPublicKey) {
-        return res.status(400).json({ error: 'Public key is not set on server' });
-    }
+        if (!storedPublicKey) {
+            return res.status(400).json({ error: 'Public key is not set on server' });
+        }
 
-    const validSignature = verifySignature(storedPublicKey, message, signature);
-    if (!validSignature) {
-        return res.status(401).json({ error: 'Invalid signature' });
-    }
+        const validSignature = verifySignature(storedPublicKey, message, signature);
+        if (!validSignature) {
+            return res.status(401).json({ error: 'Invalid signature' });
+        }
 
-    res.status(200).json({ message: 'Message verified successfully' });
+        res.status(200).json({ message: 'Message verified successfully' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
 });
 
 

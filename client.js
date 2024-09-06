@@ -10,30 +10,35 @@ if (!fs.existsSync(keyDir)) {
 
 // generating asymmetric keypair and storing it
 const generateKeypair = async () => {
-    const keypair = crypto.generateKeyPairSync("rsa", {
-        modulusLength: 2048,
-        publicKeyEncoding: {
-            type: "spki",
-            format: "pem",
-        },
-        privateKeyEncoding: {
-            type: "pkcs8",
-            format: "pem",
-        },
-    });
-    const publicKey = keypair.publicKey;
-    const privateKey = keypair.privateKey;
+    try {
+        console.log('Generating key pair...');
+        const keypair = crypto.generateKeyPairSync("rsa", {
+            modulusLength: 2048,
+            publicKeyEncoding: {
+                type: "spki",
+                format: "pem",
+            },
+            privateKeyEncoding: {
+                type: "pkcs8",
+                format: "pem",
+            },
+        });
+        const publicKey = keypair.publicKey;
+        const privateKey = keypair.privateKey;
 
-    fs.writeFileSync(path.join(keyDir, "public.pem"), publicKey);
-    fs.writeFileSync(path.join(keyDir, "private.pem"), privateKey);
+        fs.writeFileSync(path.join(keyDir, "public.pem"), publicKey);
+        fs.writeFileSync(path.join(keyDir, "private.pem"), privateKey);
 
-    console.log('Key pair generated and stored in keys directory.');
+        console.log('Key pair generated and stored in keys directory.');
+    } catch (error) {
+        console.error('Error generating key pair:', error);
+    }
 };
 
 
 const setPublicKey = async (password) => {
-    const publicKey = fs.readFileSync(path.join(keyDir, 'public.pem'), 'utf8');
     try {
+        const publicKey = fs.readFileSync(path.join(keyDir, 'public.pem'), 'utf8');
         const response = await axios.post('http://localhost:3000/set-public-key', {
             password,
             publicKey
@@ -46,14 +51,17 @@ const setPublicKey = async (password) => {
 
 // signing a message
 const signMessage = async (message) => {
-    const privateKey = fs.readFileSync(path.join(keyDir, 'private.pem'), 'utf8');
-
-    // using crypto to sign the message with the private key and print the signature and message to the console
-    const signature = crypto.createSign('sha256').update(message).sign(privateKey, 'hex');
-    console.log({
-        message,
-        signature
-    })
+    try {
+        const privateKey = fs.readFileSync(path.join(keyDir, 'private.pem'), 'utf8');
+        // using crypto to sign the message with the private key and print the signature and message to the console
+        const signature = crypto.createSign('sha256').update(message).sign(privateKey, 'hex');
+        console.log({
+            message,
+            signature
+        })
+    } catch (error) {
+        console.error('Error signing message:', error);
+    }
 }
 
 const verifyMessage = async (message, signature) => {
