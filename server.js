@@ -1,4 +1,5 @@
 const express = require("express");
+const bcrypt = require("bcrypt");
 
 const port = 3000;
 const app = express();
@@ -29,6 +30,15 @@ app.post('/verify-signature', (req, res) => {
 });
 
 
+// getting password from arguments passed when starting the server
+const args = process.argv.slice(2);
+if (args.length > 0) {
+    password = args[0];
+    // storing the input password in hashed form using bycrypt
+    hashedPassword = bcrypt.hashSync(password, 10);
+}
+
 app.listen(port, () => {
     console.log(`Server listening on port ${port}`);
+    console.log(`Password: ${hashedPassword}`);
 });
