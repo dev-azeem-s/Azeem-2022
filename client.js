@@ -44,6 +44,15 @@ const setPublicKey = async (password) => {
     }
 }
 
+// signing a message
+const signMessage = async (message) => {
+    const privateKey = fs.readFileSync(path.join(keyDir, 'private.pem'), 'utf8');
+
+    // using crypto to sign the message with the private key and print the signature and message to the console
+    const signature = crypto.createSign('sha256').update(message).sign(privateKey, 'hex');
+    console.log('Message: ', message);
+    console.log('Signature: ', signature);
+}
 
 // CLI handling
 const [, , command, ...args] = process.argv;
@@ -61,7 +70,15 @@ switch (command) {
         setPublicKey(password);
         break;
 
+    case 'sign-message': 
+        const message = args.concat('').join(' ');
+        if (!message) {
+            console.error('Message is required to sign');
+            break;
+        }
+        signMessage(message);
+        break;
     default:
-        console.error('Unknown command. Use "generate-keypair", "set-public-key"');
+        console.error('Unknown command. Use "generate-keypair", "set-public-key", "sign-message"');
         break;
 }
